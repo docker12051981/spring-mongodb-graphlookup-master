@@ -1,0 +1,159 @@
+version: '3'
+services:
+  eureka-server:
+    container_name: eureka-server
+    image: docker12051981/service-registry:0.0.2-compose
+    ports:
+      - "8761:8761"
+    environment:
+      eureka.instance.hostname: eureka-server
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka
+    networks:
+      - spring-mongodb-graphlookup-master_my-mongo-cluster
+
+  config-server:
+    container_name: config-server
+    image: docker12051981/config-server-service:0.0.2-compose
+    ports:
+      - "9296:9296"
+    depends_on:
+      - eureka-server
+    environment:
+      server.port: 9296
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka
+    networks:
+      - spring-mongodb-graphlookup-master_my-mongo-cluster
+
+  gateway-service:
+    container_name: gateway-service
+    image: docker12051981/gateway-service:0.0.2-compose
+    ports:
+      - "9191:9191"
+    depends_on:
+      - eureka-server
+      - config-server
+    environment:
+      server.port: 9191
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka
+    networks:
+      - spring-mongodb-graphlookup-master_my-mongo-cluster
+
+  structure-service:
+    container_name: structure-service
+    image: docker12051981/structure-service:0.0.2-compose
+    ports:
+      - "9001:9001"
+    links:
+      - eureka-server
+      - config-server
+    depends_on:
+      - eureka-server
+      - config-server
+
+    environment:
+      server.port: 9001
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka
+    networks:
+      - spring-mongodb-graphlookup-master_my-mongo-cluster
+
+  fonctionnaire-service:
+    container_name: fonctionnaire-service
+    image: docker12051981/fonctionnaire-service:0.0.2-compose
+    ports:
+      - "9002:9002"
+    links:
+      - eureka-server
+      - config-server
+    depends_on:
+      - eureka-server
+      - config-server
+    environment:
+      server.port: 9002
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka
+    networks:
+      - spring-mongodb-graphlookup-master_my-mongo-cluster
+      
+  login-service:
+    container_name: login-service
+    image: docker12051981/login-service:0.0.2-compose
+    ports:
+      - "9004:9004"
+    links:
+      - eureka-server
+      - config-server
+    depends_on:
+      - eureka-server
+      - config-server
+    environment:
+      server.port: 9004
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka
+    networks:
+      - spring-mongodb-graphlookup-master_my-mongo-cluster
+
+  user-service:
+    container_name: user-service
+    image: docker12051981/user-service:0.0.2-compose
+    ports:
+      - "9003:9003"
+    links:
+      - eureka-server
+      - config-server
+    depends_on:
+      - eureka-server
+      - config-server
+    environment:
+      server.port: 9003
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka
+    networks:
+      - spring-mongodb-graphlookup-master_my-mongo-cluster
+
+  contrat-service:
+    container_name: contrat-service
+    image: docker12051981/contrat-service:0.0.2-compose
+    ports:
+      - "9005:9005"
+    links:
+      - eureka-server
+      - config-server
+    depends_on:
+      - eureka-server
+      - config-server
+    environment:
+      server.port: 9005
+      eureka.client.serviceUrl.defaultZone: http://eureka-server:8761/eureka
+    networks:
+      - spring-mongodb-graphlookup-master_my-mongo-cluster
+
+  frontend:
+    container_name: frontend
+    image: docker12051981/architectui-angular-free:0.0.2-compose80
+    ports:
+      - "80:80"
+    links:
+      - structure-service
+      - fonctionnaire-service
+      - login-service
+      - user-service
+      - contrat-service
+
+    depends_on:
+      - structure-service
+      - fonctionnaire-service
+      - login-service
+      - user-service
+      - contrat-service
+    networks:
+      - spring-mongodb-graphlookup-master_my-mongo-cluster
+      
+  adminmongo:
+    image: "mrvautin/adminmongo"
+    ports:
+      - "1234:1234"
+    environment:
+      - HOST=0.0.0.0
+    networks:
+      - spring-mongodb-graphlookup-master_my-mongo-cluster
+      
+networks:
+  spring-mongodb-graphlookup-master_my-mongo-cluster:
+    external: true
